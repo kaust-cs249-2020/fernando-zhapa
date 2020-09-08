@@ -1,10 +1,6 @@
 from lib import spacedPrint
 from kmp import kmp
 
-
-import multiprocessing
-from joblib import Parallel, delayed
-from tqdm import tqdm
 #################################
 ######## PATTERN COUNT ##########
 
@@ -197,3 +193,46 @@ def approximatePatternCount(d, pattern, text):
 # print(approximatePatternCount(2,"GGCTGAG", "TCTTGTTCTTCACAATATTCAAACGAAGATGTTAATTAAAGTTGGTTACCCATAATCACCGTACGGGGCATCCCGAAGCGTAACAATGGTGAATGTCGATCTGGTGGCAAGTGGCGTACCAACGTTCGCTGAGTAATTCGGTGGGCTGAGTCGGCCATTATGACCATCCCGTGGTTAGCGGGAGTGTGCCCCTTGCGAAGTGCTCCGTCGTGGGCCATTCGAAAAGCCACGTCCTCCGATGATTCAGAGAACAGGGTATCTGGGACAATTAGTGGTGACTAACACTGCATCGCAAGAACTCAGATAAAAATTCGAACACGCTGTGGTGGTCC"))
 
 
+
+#########################################
+##### FREQUENT WORDS WITH MISMATCHES ####
+
+#finds all d neighbors of a pattern. A d-neighbor D of a pattern P is a string that contains maximum d mismatches with respect to P
+def neighbors(pattern, d):
+    #base cases
+    if d == 0:
+        return [pattern]
+    if len(pattern) == 1:
+        return ["A","C","G","T"]
+    neighborhood = []
+    neighborsSuffix = neighbors(pattern[1:],d)
+    for suffixPattern in neighborsSuffix:
+        if hammingDistance(pattern[1:], suffixPattern) == d:
+            neighborhood.append(pattern[0]+suffixPattern)
+        else:
+            for nucl in ["A","C","G","T"]:
+                neighborhood.append(nucl+suffixPattern)
+    return neighborhood
+
+# spacedPrint(neighbors("CGTTACGGA",2))
+
+
+#builds a frequency table with k-mers that appear in a text with at most d mismatches
+def frequentWordsWithMismatches(text, k, d):
+    freqTable = {}
+    patterns = []
+    for i in range(len(text) - k):
+        pattern = text[i:i+k]
+        neighborhood = neighbors(pattern, d)
+        for neighbor in neighborhood:
+            if neighbor in freqTable:
+                freqTable[neighbor] += 1
+            else:
+                freqTable[neighbor] = 1
+    maximum = maxMap(freqTable)
+    for key, value in freqTable.items():
+        if value == maximum:
+            patterns.append(key)
+    return patterns
+
+spacedPrint(frequentWordsWithMismatches("ACGTTGCATGTCGCATGATGCATGAGAGCT",4,1))
