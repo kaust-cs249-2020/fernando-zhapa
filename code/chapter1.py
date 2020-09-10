@@ -217,11 +217,11 @@ def neighbors(pattern, d):
 # spacedPrint(neighbors("CGTTACGGA",2))
 
 
-#builds a frequency table with k-mers that appear in a text with at most d mismatches
+#finds the most frequent k-mers that appear in a text with at most d mismatches
 def frequentWordsWithMismatches(text, k, d):
     freqTable = {}
     patterns = []
-    for i in range(len(text) - k):
+    for i in range(len(text) - k+1):
         pattern = text[i:i+k]
         neighborhood = neighbors(pattern, d)
         for neighbor in neighborhood:
@@ -235,4 +235,93 @@ def frequentWordsWithMismatches(text, k, d):
             patterns.append(key)
     return patterns
 
-spacedPrint(frequentWordsWithMismatches("ACGTTGCATGTCGCATGATGCATGAGAGCT",4,1))
+# spacedPrint(frequentWordsWithMismatches("GGGGCAGGGGGCGTTGTGATAGGGGATACGTGGGGCAGCAGCGTCGTGGGGCAGCAGTGTGGGGGCGTCGTATAGGGGCGTATATGTGGGGGATAGGGGATACGTGGGGCGTCAGGGGGGGGGCAGCAGCAGCGTGGGGATAGGGGCGTCGTCAGATACGTCAGTGTGCAGATATGTGGGGGCAGATAGGGGATACGTGGGGGGGGCGTCAGCGTTGTGATACAGGGGGCGTCAGTGTGGGGGCGTCAGCGTTGTGCGTCAGCGTATACAGCGTATACAGCAGATAGGGGGGGGATACAGCGTCAGCGTATAGGGGATACAGGGGGATACGTATACAGTGTGGGGGTGTGATAGGGGGGGGGGGGGGGG",7,2))
+
+
+#finds the most frequent k-mers that appear in a text with at most d mismatches and their reverse complements
+def frequentWordsWithMismatchesAndRevCompl(text, k, d):
+    freqTable = {}
+    patterns = []
+    for i in range(len(text) - k+1):
+        pattern = text[i:i+k]
+        neighborhood = neighbors(pattern, d)
+      
+        for neighbor in neighborhood:
+            if neighbor in freqTable:
+                freqTable[neighbor] += 1
+            else:
+                freqTable[neighbor] = 1
+            
+            neighbor_rc = reverseComplement(neighbor)
+            if neighbor_rc in freqTable:
+                freqTable[neighbor_rc] += 1
+            else:
+                freqTable[neighbor_rc] = 1
+
+    maximum = maxMap(freqTable)
+    for key, value in freqTable.items():
+        if value == maximum:
+            patterns.append(key)
+    return patterns
+
+
+
+# spacedPrint(frequentWordsWithMismatchesAndRevCompl("CTAATTTCTCTAATCGCGTTCTTAGTTTTAATTTAATAATTAGTAGAATTTCGAATTAGAATTTTTCGTAGAATTAGTTCGTTAATCTTAGCTAATAATAATTTTTAATCGCGTAGTTCGTAGTAGCGCTTTCGAATCTCTTTCTCGAATCTTAGAATTTCTAATAATCGTTCTCTCTCGAATAATTTTAGCGTAGAATCGCGCTCGTAGTAGTTAATTTCTCT",7,3))
+
+
+
+#####################################################
+#####################################################
+##########FINAL CHALLENGE###########################
+
+#finds all distinct k-mers forming (L,t)-clumps in genome. 
+#A k-mer forms a (L,t)-clump if it appears at least t times in an interval of lenght L with Hamming distance at most d.   
+
+def findClumpsWithMismatches(genome, k, l, t, d):
+    patterns = []
+    for i in range(len(genome) - l + 1):
+        window = genome[i:i+l]
+        freqTable = frequencyTable(window,k)
+
+        for pattern, frequency in freqTable.items():
+            if frequency >= t and not (pattern in patterns):
+                patterns.append(pattern)
+    return patterns
+
+#print(skewDiagram(genome))
+with open("../data/Salmonella_enterica.txt","r") as file_se:
+    genome = file_se.read().replace('\n', '')
+
+minSkew = minimumSkew(genome)[0]
+
+l = 500
+
+# freqPatterns = frequentWordsWithMismatchesAndRevCompl(genome[minSkew:minSkew+l],9,0)
+# spacedPrint(freqPatterns)
+
+# print(genome[minSkew:minSkew+l])
+
+
+#####################################
+##########PROBABILITY###############
+
+def generateAllStrings(length,alphabet):
+    if length == 1:
+        return alphabet
+    strings = []
+    for character in alphabet:
+        for string in generateAllStrings(length-1, alphabet):
+            strings.append(character+string)
+    return strings
+
+#spacedPrint(generateAllStrings(4,['0','1']))
+
+def probSubstring(substr, length, alphabet):
+    allStrings = generateAllStrings(length, alphabet)
+    count = 0
+    for string in allStrings:
+        if substr in string:
+            count += 1
+    return count/len(allStrings)
+
+print(probSubstring("01", 25, ['0','1']))
