@@ -3,3 +3,4 @@ def spacedPrint(list_):
     for item in list_:
         text+=str(item)+" "
     print(text[:-1]) #remove last additional space
+

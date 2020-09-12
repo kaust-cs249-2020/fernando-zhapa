@@ -24,7 +24,6 @@ def kmp(text, word):
     k = 0
     count = 0
     table = buildTable(word)
-    print(table)
     positions = []
     while i < len(text):
         if text[i] == word[k]:
