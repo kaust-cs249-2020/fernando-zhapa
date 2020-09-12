@@ -35,4 +35,4 @@ expectedValue = foldr1 (\a b -> (+) <$> a <*> b) probs
 
 main :: IO ()
 main = do
-    putStrLn "Welcome"
+    putStrLn $ show (fmap (fromRational . (500 *)) expectedValue)
