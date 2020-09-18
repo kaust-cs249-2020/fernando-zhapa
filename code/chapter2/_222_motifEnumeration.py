@@ -16,7 +16,8 @@ def isSubstringWithMismatches(pattern, string, d):
     return False
 
 
-# Given a collection of strings Dna and an integer d, a k-mer is a (k,d)-motif if it appears in every string from Dna with at most d mismatches.
+# Given a collection of strings Dna and an integer d, returns all (k,d)-motifs.
+# A k-mer is a  if it appears in every string from Dna with at most d mismatches.
 def motifEnumeration(strings, k, d):
     patterns = []
     for i in range(len(strings[0]) - k +1):
@@ -27,12 +28,17 @@ def motifEnumeration(strings, k, d):
             for string in strings:
                 if isSubstringWithMismatches(neighbor, string, d):
                     count+=1
-                # else:
-                #     break
+                else:
+                    break
             if count == len(strings):
                 patterns.append(neighbor)
     patterns = list(dict.fromkeys(patterns))
     return patterns
             
-
-# spacedPrint(motifEnumeration(["AAGCTAGGCAAAAGACGGGCAATAA", "AACTTCTGAGAGACTCCAACGCCGG","CGCTAGTTTACAACCCGTATACACT", "CGGTCCTTCATTGTTCTGTAAATCT", "CCGGCGTTCGAAAGTAGACTGATTC","CTAGTAGCGTGGCTTCAGGTATACT"], 5, 2))
+if __name__ == "__main__": 
+    spacedPrint(motifEnumeration(["AAGTAGTACGGATGCCACGTTTGCC",
+    "GTTGCGGTGAGCAAGCAGTACCTAA",
+    "TAGTATCCGCTAATCTCGACTCAAT",
+    "CAGGGTATGCCGATAGAGCTGAGTA",
+    "CATTATGGATCTACCCCTCGCAATT",
+    "TCATACATGATGGGGAACTACATAC"], 5, 2))

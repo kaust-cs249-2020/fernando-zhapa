@@ -11,7 +11,12 @@ fact n
 choose :: Integer -> Integer -> Integer
 choose n k = (fact n) `div` ((fact k) * (fact (n-k)))
 
-approxProbAtLeastT :: Integer -> Integer -> Integer -> Integer -> Maybe Rational
+approxProbAtLeastT :: 
+    Integer -> -- length of the whole text
+    Integer -> -- length of the alphabet
+    Integer -> -- length of the k-mer
+    Integer -> -- number of minimum times expected to occur
+    Maybe Rational
 approxProbAtLeastT n a k t 
     | n-t*(k-1) < t = Nothing
     | otherwise = Just $ ((/) `on` toRational) (choose (n-t*(k-1)) t) (a^(t*k)) 
