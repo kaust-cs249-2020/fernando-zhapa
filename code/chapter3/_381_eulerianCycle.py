@@ -32,9 +32,10 @@ def eulerianCycle(graph,start=-1,end=-1):
     currNode = start
     cycle = [start]
     while bool(graph): #the graph has remaining edges
-        if not currNode in graph: #non Eulerian cycle
+        if not currNode in graph: #a non Eulerian cycle has been found and the currNode  does not have any outgoing edge
             for vertex in cycle: #look for new start
                 if vertex in graph:
+                    print(graph[vertex])
                     start = vertex
                     cycle = redefineCycle(cycle,start)
                     currNode = start

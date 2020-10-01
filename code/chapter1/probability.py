@@ -20,5 +20,6 @@ def probSubstring(substr, length, alphabet):
             count += 1
     return count/len(allStrings)
 
-print(probSubstring("01", 25, ['0','1']))
+if __name__ == "__main__": 
+    print(probSubstring("01", 25, ['0','1']))
 

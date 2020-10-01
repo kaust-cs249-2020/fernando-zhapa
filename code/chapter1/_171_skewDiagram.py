@@ -32,7 +32,7 @@ def minimumSkew(string):
             minimums.append(i)
     return minimums
 
-
-# file_sk = open("../../data/dataset_369238_6.txt", "r")
-# text_sk = file_sk.read()
-# spacedPrint(minimumSkew(text_sk))
+if __name__ == "__main__": 
+    file_sk = open("../../data/dataset_369238_6.txt", "r")
+    text_sk = file_sk.read()
+    spacedPrint(minimumSkew(text_sk))

@@ -1,4 +1,8 @@
+import sys
+sys.path.append('..')
+
 from _331_pathToGenome import pathToGenome
+from lib import verticalPrint
 
 def readGappedSequence(strings):
     sequence = []
@@ -38,6 +42,7 @@ if __name__ == "__main__":
     sequenceStr = [line.rstrip('\n') for line in file]
     sequence = readGappedSequence(sequenceStr)
 
+    
 
-  
+    verticalPrint(sequence)
     print(stringSpelledByGappedPatterns(50,200,sequence))

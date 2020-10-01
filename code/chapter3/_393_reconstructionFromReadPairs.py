@@ -1,5 +1,9 @@
+import sys
+sys.path.append('..')
+
 from _382_eulerianPath import eulerianPath
 from _392_stringSpelledByGappedPatterns import stringSpelledByGappedPatterns, readGappedSequence
+from lib import printGraphAdjList
 
 def deBruijn(gappedPatterns):
     # Input: A collection of k-mers Patterns.
