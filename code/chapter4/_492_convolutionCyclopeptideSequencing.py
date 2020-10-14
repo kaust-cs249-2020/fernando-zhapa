@@ -5,6 +5,7 @@ from itertools import groupby
 from lib import toStr, spacedPrint
 from dictionaries import molecularMassesExtended
 from _491_spectralConvolution import spectralConvolution
+from _4131_linearScoring import lScore
 from _471_cyclicScoring import cScore
 from _472_leaderboardCyclopeptideSequencing import leaderboardCyclopeptideSequencing, leaderboardCyclopeptideSequencingAll
 
@@ -108,5 +109,4 @@ if __name__ == "__main__":
     peptides = convolutionCyclopeptideSequencingAll(m,n,spectrum)
     peptidesStr = [toStr(i) for i in peptides]
     spacedPrint(peptidesStr)
-
 

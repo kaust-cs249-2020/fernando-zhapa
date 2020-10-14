@@ -50,6 +50,7 @@ def leaderboardCyclopeptideSequencingAll(spectrum, n, dictionary):
         leaderboard =  expand(leaderboard, dictionary)   
         for peptide in leaderboard[:]:
             if mass(peptide) == parentMass(spectrum):
+             #   print("Cyclic score: " + str(cScore(peptide, spectrum)) + "\t Linear score: " + str(lScore(peptide, spectrum)))
                 if cScore(peptide, spectrum) > cScore(leaderPeptides[0], spectrum):
                     leaderPeptides = [peptide]
                 elif cScore(peptide, spectrum) == cScore(leaderPeptides[0], spectrum):
