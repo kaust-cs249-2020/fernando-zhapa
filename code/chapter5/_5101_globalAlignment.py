@@ -47,8 +47,8 @@ def lcsBackTrack(v, w, indexAmino, scoreMatrix, indelPenalty):
             elif distances[i][j] == incomingDiag:
                 backTrackMatrix[i-1][j-1] = 'diag'
 
-    # print(distances)
-    # print(backTrackMatrix)
+    print(np.array(distances))
+    print(np.array(backTrackMatrix))
     return (distances, backTrackMatrix)
 
 
