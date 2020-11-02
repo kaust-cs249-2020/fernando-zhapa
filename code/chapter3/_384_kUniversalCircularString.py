@@ -33,4 +33,4 @@ def kUniversalCircularString(k):
 
 if __name__ == "__main__":
     
-    print(kUniversalCircularString(9))
+    print(kUniversalCircularString(5))

@@ -57,6 +57,15 @@ if __name__ == "__main__":
 #    file = open("../../data/eulerCycle.txt", 'r')
     strings = [line.rstrip('\n') for line in file]
 
+    strings = [
+        "1 -> 2",
+        "2 -> 3",
+        "2 -> 4",
+        "3 -> 1",
+        "3 -> 2",
+        "4 -> 3",
+        "4 -> 4",
+    ]
     graph = readAdjacencyList(strings)
     cycle = eulerianCycle(graph)
     cycleToStr = [str(i) for i in cycle]

@@ -72,6 +72,7 @@ def entropyOfMatrix(matrix):
     entropy = 0
     for j in range(len(profile[0])):
         entropy += entropyOfColumn(col(profile,j))
+        print(j, entropyOfColumn(col(profile,j)))
     return entropy
 
 
@@ -89,6 +90,21 @@ if __name__ == "__main__":
         "TCGGGTATAACC"
     ]
 
+    matrix2 = [
+        "ACTG",
+        "AGTC",
+        "GCTG",
+        "ACGT",
+        "AGCA",
+        "CCAG",
+        "TGTC",
+        "GATG",
+        "ATGT",
+        "AGAA",
+    ]
 
 
-    print(entropyOfMatrix(matrix))
+    # print(profileMotifsNoSucc(matrix2))
+    # print(score(matrix2))
+    # print(entropyOfMatrix(matrix2))
+    print(entropyOfMatrix(matrix2))
