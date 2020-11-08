@@ -1,3 +1,0 @@
-Result
-MAINSCORE 23
-{7: 0, 6: 0}
