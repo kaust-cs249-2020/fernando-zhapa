@@ -140,3 +140,8 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+
+#Haskell stuff
+
+**/.stack-work/
