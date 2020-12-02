@@ -9,8 +9,9 @@ import qualified Data.Map.Strict as MS
 import qualified Data.Vector as V
 import Data.List hiding (transpose)
 import Data.Function
+import Data.List.Split
 
-data State =  Ins | Del | Match
+data State =  Ins | Del | Match deriving (Eq)
 
 processAlignment :: 
         Matrix String 
@@ -28,7 +29,7 @@ processAlignment alignment dropped prevCol 0 states_ transitionHMM
                     colWithStates = colVector $ V.map (\x -> (x, "I0")) currCol
                     newTransition = setElem 1 (1, 2) transitionHMM
                 in
-                    processAlignment alignment dropped colWithStates 1 states_ newTransition
+                    processAlignment alignment dropped colWithStates 1 states_ $! newTransition
 
     | otherwise = 
                 let 
@@ -37,7 +38,7 @@ processAlignment alignment dropped prevCol 0 states_ transitionHMM
                     colWithStates = colVector $ V.map (\x -> (x, "M1")) currCol  
                     newTransition = setElem 1 (1, 3) transitionHMM
                 in
-                    processAlignment alignment dropped colWithStates 1 states_ newTransition
+                    processAlignment alignment dropped colWithStates 1 states_ $! newTransition
 
 
 processAlignment alignment dropped prevCol idxCurrCol states_ transitionHMM =
@@ -49,7 +50,7 @@ processAlignment alignment dropped prevCol idxCurrCol states_ transitionHMM =
 
                     newTransition = foldl foldFunction transitionHMM positions 
                 in
-                    processAlignment alignment dropped newColWithStates (idxCurrCol + 1) states_ newTransition
+                    processAlignment alignment dropped newColWithStates (idxCurrCol + 1) states_ $! newTransition
 
 
 
@@ -101,11 +102,11 @@ getPositions transitions states_ = dictIndexed
         dictStates = MS.fromList $ zip (nub transitions) (repeat 0)
         foldFunc = \group dict->
                         let
-                            len = length group
+                            len = fromIntegral $ length group
                             subgroups = groupBy ((==) `on` snd) group
                         in  foldr (\subgroup dict->
                                                 let
-                                                    sublen = length subgroup
+                                                    sublen = fromIntegral $ length subgroup
                                                 in
                                                     MS.insert (subgroup!!0) (sublen/len) dict     
                                             ) dict subgroups
@@ -121,13 +122,13 @@ getPositions transitions states_ = dictIndexed
 
 
 droppedCols :: Matrix String -> Double -> [Int]
-droppedCols matrix threshold = map snd $ filter (\(a,b) -> a) (zip transposed [1..])
+droppedCols matrix threshold = map snd $ filter (\(a,b) -> a) (zip dropped [1..])
     where
         transposed = toLists $ transpose matrix
         dropped = map   (\col -> 
                             let
-                                len = length col
-                                empty = len $ filter (=="_")
+                                len     = fromIntegral $ length col
+                                empty   = fromIntegral $ length $ filter (== "_") col
                             in if empty/len > threshold then True else False
                         ) transposed
         
@@ -135,7 +136,7 @@ droppedCols matrix threshold = map snd $ filter (\(a,b) -> a) (zip transposed [1
 prepareStates :: Double -> Alphabet -> Matrix String -> States
 prepareStates threshold alphabet_ alignment = generateStates lengthStates
     where
-        colsToDrop = dropped alignment threshold
+        colsToDrop = droppedCols alignment threshold
         totalCols = ncols alignment
         lengthStates = totalCols - (length colsToDrop)
 
@@ -149,28 +150,28 @@ generateStates len = MS.fromList $ zip statesString [1..]
         statesString = source : initialIns : intermediate ++ [sink]
 ----------------------------------------------
 
-processInput :: [String] -> (Double, Alphabet, [String])
+processInput :: [String] -> (Double, Alphabet, Matrix String)
 processInput input = (threshold, alphabetHMM, alignment)
     where
 
         splitt =  splitOn (return "--------") input
 
-        threshold = map return $ (splitt !! 0) !! 0
+        threshold = read $ head (splitt !! 0)
         
         alphabet_ =  splitt !! 1
         alphabetHMM = MS.fromList $ zip (words (alphabet_!!0)) [1..]
 
-        alignment =  splitt!!2
+        alignment = fromLists $ map return $ splitt!!2
 
        
 
 
 _main = do
-    input <- fmap lines $ readFile "../data/profileHMM.txt"
+    input <- fmap lines $ readFile "data/profileHMM.txt"
     (threshold, alphabetHMM, alignment) <- return $ processInput input
     states <- return $ prepareStates threshold alphabetHMM alignment
-    colsToDrop <- droppedCols alignment threshold
-    transitionHMM <- processAlignment alignment colsToDrop (zero 1 1) 0 states (zero (length states) (length states))
+    colsToDrop <- return $ droppedCols alignment threshold
+    transitionHMM <- return $ processAlignment alignment colsToDrop (matrix 1 1 (\_ -> ("", ""))) 0 states (zero (length states) (length states))
     print transitionHMM
 
 
