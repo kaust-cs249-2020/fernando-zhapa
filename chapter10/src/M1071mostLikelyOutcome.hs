@@ -1,4 +1,4 @@
-module M1061Viterbi where
+module M1071mostLikelyOutcome where
 
 import Types
 import qualified Data.Map.Strict as MS
@@ -9,20 +9,9 @@ import Data.Function
 import Data.List hiding (transpose)
 import Data.Ord
 import Debug.Trace
+import M1061Viterbi (submatrix', setCol)
 import Data.List.Split
 
-
-submatrix' :: (Int, Int) -> (Int, Int) -> Matrix Double -> Matrix Double
-submatrix' (srow, erow) (scol, ecol) = submatrix srow erow scol ecol 
-
-setCol :: Int -> Col -> Matrix Double -> Matrix Double
-setCol idx col mat 
-    | idx == 1 = col <|> right
-    | idx == (ncols mat) = left <|> col
-    | otherwise = left <|> col <|> right
-    where
-        left = submatrix' (1,(nrows mat)) (1,idx-1) mat
-        right = submatrix' (1,(nrows mat)) (idx+1, (ncols mat)) mat
 
 dynamicPart :: Matrix Double -> Transition -> Double -> Int -> Matrix Double
 dynamicPart viterbiGraph transitionHMM initialProb column
@@ -35,31 +24,31 @@ dynamicPart viterbiGraph transitionHMM initialProb column
         processCol = \col -> 
                         let
                             colToList = (V.toList col)
-                            newCol = (zipWith (\x list -> foldr1 max (map (x*) (zipWith (*) prevCol list))) colToList transitionMatrix)
+                            newCol = (zipWith (\x list -> foldr1 (+) (map (x*) (zipWith (*) prevCol list))) colToList transitionMatrix)
                         in (colVector $ V.fromList newCol)
 
         updatedViterbiGraph = setCol column (processCol (getCol column viterbiGraph)) viterbiGraph
         
 
-maxi :: Ord a => [a] -> (a, Int)
-maxi xs = maximumBy (comparing fst) (zip xs [0..])
+-- maxi :: Ord a => [a] -> (a, Int)
+-- maxi xs = maximumBy (comparing fst) (zip xs [0..])
 
 
-backTracking :: Matrix Double -> Int -> Matrix Double -> [Int] -> [Int]
-backTracking viterbiGraph column transitionHMM path
-    | column == 1 = path
-    | otherwise = backTracking viterbiGraph (column-1) transitionHMM $! (snd newChosen:path)
+-- backTracking :: Matrix Double -> Int -> Matrix Double -> [Int] -> [Int]
+-- backTracking viterbiGraph column transitionHMM path
+--     | column == 1 = path
+--     | otherwise = backTracking viterbiGraph (column-1) transitionHMM $! (snd newChosen:path)
 
-    where
-        prevCol = V.toList $ getCol (column-1) viterbiGraph
-        actualChosen = (head path) + 1
+--     where
+--         prevCol = V.toList $ getCol (column-1) viterbiGraph
+--         actualChosen = (head path) + 1
         
-        transitionCol = V.toList $ getCol actualChosen transitionHMM
-        newChosen = maxi $ zipWith (*) prevCol transitionCol
+--         transitionCol = V.toList $ getCol actualChosen transitionHMM
+--         newChosen = maxi $ zipWith (*) prevCol transitionCol
 
 
-viterbi :: [String] -> HMM -> String
-viterbi sequence hmm =  concat path
+mostLikelyOutcome :: [String] -> HMM -> Double
+mostLikelyOutcome sequence hmm =  foldr1 (+) $ V.toList $ getCol cols viterbiForward
     where
         emissionHMM = hmm^.emission
         alphabetHMM = hmm^.alphabet
@@ -72,13 +61,16 @@ viterbi sequence hmm =  concat path
                         in getCol idxAlphabet emissionHMM   
         
         
+
         viterbiGraph = foldl1 (<|>) $ map (colVector. emissions) sequence
 
         viterbiForward = dynamicPart viterbiGraph transitionHMM initialProb 1
 
-        pathInIdxs = backTracking viterbiForward cols transitionHMM [snd $ maxi $ V.toList $ getCol cols viterbiForward]
 
-        path = map (\x -> head [ k |  k <- MS.keys statesHMM, (statesHMM MS.! k) == x+1 ]) pathInIdxs
+
+        -- pathInIdxs = backTracking viterbiForward cols transitionHMM [snd $ maxi $ V.toList $ getCol cols viterbiForward]
+
+        -- path = map (\x -> head [ k |  k <- MS.keys statesHMM, (statesHMM MS.! k) == x+1 ]) pathInIdxs
 
 
 processInput :: [String] -> ([String], HMM)
@@ -106,8 +98,9 @@ processInput input = (sequence, hmm)
 
         hmm = HMM alphabetHMM statesHMM transitionHMM emissionHMM
 
+
 _main = do
-    input <- fmap lines $ readFile "../data/viterbi.txt"
+    input <- fmap lines $ readFile "../data/mostLikelyOutcome.txt"
     (sequence, hmm) <- return $ processInput input
-    path <- return $ viterbi sequence hmm
+    path <- return $ mostLikelyOutcome sequence hmm
     print path
