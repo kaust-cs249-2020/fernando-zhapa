@@ -25,8 +25,13 @@ source-repository head
 library
   exposed-modules:
       M1051probHiddenPath
+      M1052probOutcomeGivenPath
+      M1061Viterbi
+      M1071mostLikelyOutcome
+      M1081profileHMM 
   other-modules:
       Paths_chapter10
+
   hs-source-dirs:
       src
   build-depends:

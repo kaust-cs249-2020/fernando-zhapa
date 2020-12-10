@@ -1,47 +1,56 @@
 {-#LANGUAGE ScopedTypeVariables#-}
+{-# LANGUAGE CPP #-}
+
+#define traceLoc trace (__FILE__ ++":"++ show __LINE__)
+
 
 module M1081profileHMM where
 
 
+
+import Debug.Trace
 import Types
-import Data.Matrix
+import Data.Matrix hiding (trace)
 import qualified Data.Map.Strict as MS
 import qualified Data.Vector as V
 import Data.List hiding (transpose)
 import Data.Function
 import Data.List.Split
+import GHC.Stack
 
 data State =  Ins | Del | Match deriving (Eq)
 
-processAlignment :: 
+processAlignment :: HasCallStack =>
         Matrix String 
-    ->  [Int]                   -- | List of indices of dropped columns
-    ->  Matrix (String, String) -- | (Character, State) 
+    ->  [Int]                   -- ^ List of indices of dropped columns
+    ->  Matrix (String, String) -- ^ (Character, State) 
     ->  Int 
     ->  States
     ->  Transition 
     ->  Transition
-processAlignment alignment dropped prevCol 0 states_ transitionHMM
-    | elem 0 dropped = 
+processAlignment alignment dropped prevCol 1 states_ transitionHMM
+    | elem 1 dropped = 
                 let 
                     rows = nrows alignment
                     currCol = getCol 1 alignment
-                    colWithStates = colVector $ V.map (\x -> (x, "I0")) currCol
+                    colWithStates = colVector $ V.map (\x -> (x, "2I0")) currCol
                     newTransition = setElem 1 (1, 2) transitionHMM
                 in
-                    processAlignment alignment dropped colWithStates 1 states_ $! newTransition
+                    trace ("FST DEF, FST GUARD OF PROCESS ALIGNMENT " ++ show 1) processAlignment alignment dropped colWithStates 2 states_ $! newTransition
 
     | otherwise = 
                 let 
                     rows = nrows alignment
                     currCol = getCol 1 alignment
-                    colWithStates = colVector $ V.map (\x -> (x, "M1")) currCol  
+                    colWithStates = colVector $ V.map (\x -> (x, "3M1")) currCol  
                     newTransition = setElem 1 (1, 3) transitionHMM
                 in
-                    processAlignment alignment dropped colWithStates 1 states_ $! newTransition
+                    trace ("FST DEF, SEC GUARD OF PROCESS ALIGNMENT " ++ show 1) processAlignment alignment dropped colWithStates 2 states_ $! newTransition
 
 
-processAlignment alignment dropped prevCol idxCurrCol states_ transitionHMM =
+processAlignment alignment dropped prevCol idxCurrCol states_ transitionHMM
+    | idxCurrCol > ncols alignment = transitionHMM
+    | otherwise = 
                 let 
                     (newColWithStates, positions )= getNewCol prevCol currCol idxCurrCol dropped states_
                     currCol = colVector $ getCol (idxCurrCol+1) alignment
@@ -50,21 +59,23 @@ processAlignment alignment dropped prevCol idxCurrCol states_ transitionHMM =
 
                     newTransition = foldl foldFunction transitionHMM positions 
                 in
-                    processAlignment alignment dropped newColWithStates (idxCurrCol + 1) states_ $! newTransition
+                    trace ("SEC DEF, SEC GUARD OF PROCESS ALIGNMENT " ++ show idxCurrCol) processAlignment alignment dropped newColWithStates (idxCurrCol + 1) states_ $! newTransition
 
 
 
 -------------------------------------
-next :: State -> String -> String
+next :: HasCallStack => State -> String -> String
 next st str
-    | st == Match   = "M" ++ show (num+1)
-    | st == Ins     = "I" ++ show (num+1)
-    | st == Del     = "D" ++ show (num+1)
-
+    | st == Match   = trace ("IN NEXT M " ++ str ++ "  " ++ ((show $ 3*(num+1) + 0) ++ "M" ++ show (num+1))) (show $ 3*num + 0) ++ "M" ++ show (num+1)
+    | st == Del     = trace ("IN NEXT D " ++ str ++ "  " ++ ((show $ 3*(num+1) + 1) ++ "D" ++ show (num+1))) (show $ 3*num + 1) ++ "D" ++ show (num+1)
+    | st == Ins     = trace ("IN NEXT I " ++ str ++ "  " ++ ((show $ 3*(num+1) + 2) ++ "I" ++ show (num+1))) (show $ 3*num + 2) ++ "I" ++ show (num+1)
+    
     where
-        num = read $ return $ str!!1
+        pref = read $ return $ str!!0
+        nextPref = pref + 3
+        num = read $ return $ str!!2
 
-getNewCol :: 
+getNewCol :: HasCallStack =>
         Matrix (String, String) 
     ->  Matrix String 
     ->  Int 
@@ -82,7 +93,7 @@ getNewCol prevCol currCol idxCol dropped states_
                                         else (state, next Ins state)
 
                 positions =  getPositions pairsStates states_
-            in (,) (colVector $ V.fromList $ zip currColList (map snd pairsStates)) positions
+            in trace ("NEW VECTOR \n" ++ show ((,) (colVector $ V.fromList $ zip currColList (map snd pairsStates)) positions)) (,) (colVector $ V.fromList $ zip currColList (map snd pairsStates)) positions
     | otherwise = 
             let
                 currColList = head $ toLists currCol
@@ -93,10 +104,10 @@ getNewCol prevCol currCol idxCol dropped states_
                                         else (state, next Match state)
 
                 positions =  getPositions pairsStates states_
-            in (,) (colVector $ V.fromList $ zip currColList (map snd pairsStates)) positions
+            in trace ("NEW VECTOR \n" ++ show ((,) (colVector $ V.fromList $ zip currColList (map snd pairsStates)) positions)) (,) (colVector $ V.fromList $ zip currColList (map snd pairsStates)) positions
 
-getPositions :: [(String, String)] -> States -> [((Int, Int), Double)]
-getPositions transitions states_ = dictIndexed
+getPositions :: HasCallStack => [(String, String)] -> States -> [((Int, Int), Double)]
+getPositions transitions states_ = trace ("IN GET POSITIONS   " ++  show dictIndexed) dictIndexed
     where
         initStatesGroups = groupBy ((==) `on` fst) transitions
         dictStates = MS.fromList $ zip (nub transitions) (repeat 0)
@@ -121,36 +132,36 @@ getPositions transitions states_ = dictIndexed
                             ) $ MS.toList newDict
 
 
-droppedCols :: Matrix String -> Double -> [Int]
-droppedCols matrix threshold = map snd $ filter (\(a,b) -> a) (zip dropped [1..])
+droppedCols :: HasCallStack => Matrix String -> Double -> [Int]
+droppedCols matrix threshold = trace ("in dropped " ++ show dropped) map snd $ filter (\(a,b) -> a) (zip dropped [1..])
     where
         transposed = toLists $ transpose matrix
-        dropped = map   (\col -> 
-                            let
-                                len     = fromIntegral $ length col
-                                empty   = fromIntegral $ length $ filter (== "_") col
-                            in if empty/len > threshold then True else False
-                        ) transposed
+        dropped =  map   (\col -> 
+                                    let
+                                        len     = fromIntegral $ length col
+                                        empty   = fromIntegral $ length $ filter (== "-") col
+                                    in if empty/len > threshold then True else False
+                                ) transposed
         
 ----------------------------------------------
-prepareStates :: Double -> Alphabet -> Matrix String -> States
-prepareStates threshold alphabet_ alignment = generateStates lengthStates
+prepareStates :: HasCallStack =>  Double -> Alphabet -> Matrix String -> States
+prepareStates threshold alphabet_ alignment = trace ("IN PREPARE STATES " ++  (show $ generateStates lengthStates)) generateStates lengthStates
     where
         colsToDrop = droppedCols alignment threshold
         totalCols = ncols alignment
         lengthStates = totalCols - (length colsToDrop)
 
-generateStates :: Int -> States
-generateStates len = MS.fromList $ zip statesString [1..]
+generateStates :: HasCallStack => Int -> States
+generateStates len = trace ("LEN  " ++ show len ) MS.fromList $ zip statesString [1..]
     where
-        source = "S"
-        initialIns = "I0"
-        intermediate = concatMap (\num -> map (++ show num)["M", "D", "I"])  [1..len]
+        source = "1S"
+        initialIns = "2I0"
+        intermediate = concatMap (\num -> map (++ show num)[show (3*num) ++ "M", show (3*num +1) ++ "D", show (3*num+2) ++ "I"])  [1..len]
         sink = "E"
         statesString = source : initialIns : intermediate ++ [sink]
 ----------------------------------------------
 
-processInput :: [String] -> (Double, Alphabet, Matrix String)
+processInput :: HasCallStack => [String] -> (Double, Alphabet, Matrix String)
 processInput input = (threshold, alphabetHMM, alignment)
     where
 
@@ -161,7 +172,7 @@ processInput input = (threshold, alphabetHMM, alignment)
         alphabet_ =  splitt !! 1
         alphabetHMM = MS.fromList $ zip (words (alphabet_!!0)) [1..]
 
-        alignment = fromLists $ map return $ splitt!!2
+        alignment = fromLists $ map (map return) $ splitt!!2
 
        
 
@@ -171,7 +182,7 @@ _main = do
     (threshold, alphabetHMM, alignment) <- return $ processInput input
     states <- return $ prepareStates threshold alphabetHMM alignment
     colsToDrop <- return $ droppedCols alignment threshold
-    transitionHMM <- return $ processAlignment alignment colsToDrop (matrix 1 1 (\_ -> ("", ""))) 0 states (zero (length states) (length states))
+    transitionHMM <- return $ processAlignment alignment colsToDrop (matrix 1 1 (\_ -> ("", ""))) 1 states (zero (length states) (length states))
     print transitionHMM
 
 
